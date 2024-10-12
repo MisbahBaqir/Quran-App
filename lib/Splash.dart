@@ -1,7 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:quran/quran.dart' as quran;
+import 'package:just_audio/just_audio.dart';
+
+
 
 
 class Splash extends StatefulWidget {
@@ -12,184 +17,298 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
-   AudioPlayer audioplayer= AudioPlayer();
-   IconData playpauseButton= Icons.play_circle_fill_rounded;
-   bool isplaying= false;
+  @override
+  void initState() {
+    // TODO: implement initState
 
-    Future<void> toggleButton() async{
+    Timer(
+        const Duration(seconds: 3),
+        () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const Screen(),
+                  ));
+            });
+    super.initState();
+  }
 
-      try {
-      
-        final audiourl= await quran.getAudioURLBySurah(widget.indexsurah+1);
-        audioplayer.setUrl(audiourl);
-        print(audiourl);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: SizedBox(
+          height: double.infinity,
+          width: double.infinity,
+          child: Image.asset("assets/images/Quran.png"),
+        ),
+      ),
+      backgroundColor: Colors.brown[900],
+    );
+  }
+}
 
-        if (isplaying) {
-          
-          audioplayer.play();
+class Screen extends StatefulWidget {
+  const Screen({super.key});
 
-          playpauseButton=Icons.pause_circle_rounded;
-          isplaying=false;
+  @override
+  State<Screen> createState() => _ScreenState();
+}
 
-          setState(() {});
-  
-        } else{
-           audioplayer.pause();
-           playpauseButton=Icons.play_circle_fill_rounded;
-           isplaying=true;
+class _ScreenState extends State<Screen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Surahs(),
+                      ));
+                },
+                child: const Text("Quran")),
+            const SizedBox(
+              height: 10,
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SurahRecitation(),
+                      ));
+                },
+                child: const Text("Recitation"))
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-           setState(() {});
-        }
+class Surahs extends StatefulWidget {
+  const Surahs({super.key});
 
-      } catch (e) {
-             print("my error=>$(e)");
-      }
-    }
+  @override
+  State<Surahs> createState() => _SurahsState();
+}
 
+class _SurahsState extends State<Surahs> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView.builder(
+        itemBuilder: (context, index) {
+          return ListTile(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailSurah(index + 1),
+                  ));
+            },
+            leading: CircleAvatar(
+                backgroundColor: Colors.brown[900],
+                child: Text(
+                  "${index + 1}",
+                  style: const TextStyle(color: Colors.white),
+                )),
+            title: Text(
+                "${quran.getSurahName(index + 1)} | ${quran.getSurahNameArabic(index + 1)}",
+                style: GoogleFonts.amiriQuran()),
+            subtitle: Text(quran.getSurahNameEnglish(index + 1)),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                quran.getPlaceOfRevelation(index + 1) == 'Makkah'
+                    ? Image.asset('images/kaaba.png', width: 30, height: 30)
+                    : Image.asset('images/madina.png', width: 30, height: 30),
+                Text(
+                  "verses${quran.getVerseCount(index + 1)}",
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          );
+        },
+        itemCount: quran.totalSurahCount,
+      ),
+    );
+  }
+}
 
-    @override
+class DetailSurah extends StatefulWidget {
+  var index;
+  DetailSurah(this.index, {super.key});
+
+  @override
+  State<DetailSurah> createState() => _DetailSurahState();
+}
+
+class _DetailSurahState extends State<DetailSurah> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView.builder(
+        itemCount: quran.getVerseCount(widget.index),
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(
+              quran.getVerse(widget.index, index + 1, verseEndSymbol: true),
+              textAlign: TextAlign.right,
+              style: GoogleFonts.amiriQuran(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SurahRecitation extends StatefulWidget {
+  const SurahRecitation({super.key});
+
+  @override
+  State<SurahRecitation> createState() => _SurahRecitationState();
+}
+
+class _SurahRecitationState extends State<SurahRecitation> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: ListView.builder(
+      itemBuilder: (context, index) {
+        return ListTile(
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Recitation(
+                          index + 1,
+                        )));
+          },
+          leading: CircleAvatar(
+            backgroundColor: Colors.brown[900],
+            child: Text(
+              "${index + 1}",
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          title: Text(
+              "${quran.getSurahName(index + 1)} | ${quran.getSurahNameArabic(index + 1)}",
+              style: GoogleFonts.amiriQuran()),
+          subtitle: Text(
+            "مشاري بن راشد العفاسي",
+            style: GoogleFonts.amiriQuran(
+                textStyle: TextStyle(color: Colors.brown[800])),
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              quran.getPlaceOfRevelation(index + 1) == 'Makkah'
+                  ? Image.asset('images/kaaba.png', width: 30, height: 30)
+                  : Image.asset('images/madina.png', width: 30, height: 30),
+              Text(
+                "verses${quran.getVerseCount(index + 1)}",
+                style: const TextStyle(fontSize: 10),
+              ),
+            ],
+          ),
+        );
+      },
+      itemCount: 114,
+    ));
+  }
+}
+
+class Recitation extends StatefulWidget {
+  var indexSurah;
+  Recitation(this.indexSurah, {super.key});
+
+  @override
+  State<Recitation> createState() => _RecitationState();
+}
+
+class _RecitationState extends State<Recitation> {
+  AudioPlayer audioPlayer = AudioPlayer();
+  IconData playpauseButton = Icons.play_circle_fill_rounded;
+  bool isplaying = true;
+
+  @override
   void dispose() {
-    // TODO: implement dispose
-    audioplayer.dispose();
+    audioPlayer.dispose();
+
     super.dispose();
   }
 
+  Future<void> togglebtn() async {
+    try {
+      final audioUrl = quran.getAudioURLBySurah(widget.indexSurah);
+      audioPlayer.setUrl(audioUrl);
 
+      if (isplaying) {
+        audioPlayer.play();
 
-    @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
+        setState(() {
+          playpauseButton = Icons.pause_circle_filled_rounded;
+          isplaying = false;
+        });
+      } else {
+        audioPlayer.pause();
 
-    Timer(Duration(seconds: 03), () {
-          
-          Navigator.push(context, MaterialPageRoute(builder: (context) => Surahlist() ,));
-    });
+        setState(() {
+          playpauseButton = Icons.play_circle_fill_rounded;
+          isplaying = true;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Quran App"),),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-
-            Center(child: Image.asset("assets images/Quran.png")),
-
-          Center(child: Text("Quran App", style: TextStyle(color: Colors.teal),)),
+          Text(
+            "سورۃ ${quran.getSurahNameArabic(widget.indexSurah)}",
+            style: GoogleFonts.amiriQuran(textStyle: const TextStyle(fontSize: 30)),
+            textDirection: TextDirection.rtl,
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          const Center(
+            child: CircleAvatar(
+              backgroundColor: Color(0xff272729),
+              radius: 100,
+              backgroundImage: AssetImage(
+                "assets/images/alaffasy.png",
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Container(
+            width: double.infinity,
+            color: const Color.fromARGB(255, 49, 13, 1),
+            // height: double.infinity,
+            child: Center(
+                child: IconButton(
+                    onPressed: togglebtn,
+                    icon: Icon(color: Colors.white, playpauseButton))),
+          ),
         ],
       ),
-      backgroundColor: const Color.fromARGB(162, 201, 172, 12),
-      );
-  }
-}
-
-  
-
-
-class Surahlist extends StatefulWidget {
-  const Surahlist({super.key});
-
-  @override
-  State<Surahlist> createState() => _SurahlistState();
-}
-
-class _SurahlistState extends State<Surahlist> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      
-      appBar: AppBar(title: Text("Quran App"),),
-      
-      body:ListView.builder(
-        
-        itemCount: quran.totalSurahCount,
-        itemBuilder:(context, index){
-
-          ListTile(
-
-
-            onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => Surah( index),));
-            },
-          
-            title: Text(quran.getSurahNameArabic(index+1)),
-            subtitle:Text(quran.getSurahNameEnglish(index+1)) ,
-            leading: CircleAvatar(
-              child: Text("${index+1}", style: TextStyle(color: Colors.white),),
-              backgroundColor: const Color.fromARGB(162, 201, 172, 12),
-            ),
-            trailing: Text("${quran.getVerseCount(index+1)}"),
-
-
-
-
-
-
-
-          );
-
-      }),);
-  }
-}
-
-
-class Surah extends StatefulWidget {
-  int indexsurah;
-   Surah(this.indexsurah ,{super.key});
-
-  @override
-  State<Surah> createState() => _SurahState();
-}
-
-class _SurahState extends State<Surah> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Column(
-      children: [
-        Expanded(
-          child: Card(
-            child: ListView.builder(
-              itemCount: quran.getVerseCount(widget.indexsurah+1),
-              itemBuilder: (context, index) {
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                     quran.getVerse(18, index + 1, verseEndSymbol: true),
-                     textAlign: TextAlign.right,
-                    ),
-                  ),
-                );
-              }
-              
-              ),
-          ),
-        ),
-        
-        
-        
-        Card(
-           
-           elevation: 6,
-           shadowColor: const Color.fromARGB(206, 221, 156, 178),
-           child: Center(
-            child: IconButton (
-              icon: Icon(
-                playpauseButton,
-                color: const Color.fromARGB(162, 201, 172, 12),
-              ),
-              onPressed: toggleButtons),
-           ),
-          
-          
-          
-          
-          )
-      ],
-    ),);
+    );
   }
 }
